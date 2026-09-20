@@ -2,7 +2,8 @@ package com.autoskip
 
 import android.accessibilityservice.AccessibilityService
 import android.graphics.Rect
-import android.util.DisplayMetrics
+import android.os.Handler
+import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 
@@ -13,6 +14,15 @@ class SkipAdService : AccessibilityService() {
     private var screenWidth = 0
     private var screenHeight = 0
 
+    private val handler = Handler(Looper.getMainLooper())
+    private var pollRunnable: Runnable? = null
+    private var pollCount = 0
+
+    companion object {
+        private const val POLL_INTERVAL_MS = 500L
+        private const val MAX_POLL_COUNT = 20
+    }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         val dm = resources.displayMetrics
@@ -22,23 +32,46 @@ class SkipAdService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         event ?: return
-        if (event.eventType !in listOf(
-                AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
-                AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED,
-                AccessibilityEvent.TYPE_VIEW_SCROLLED
-            )
-        ) return
+        if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
 
-        val rootNode = rootInActiveWindow ?: return
-        val rightRegion = Rect(
-            (screenWidth * 0.5).toInt(),
-            0,
-            screenWidth,
-            (screenHeight * 0.35).toInt()
-        )
+        startPolling()
+    }
 
-        findAndClickSkip(rootNode, rightRegion)
-        rootNode.recycle()
+    private fun startPolling() {
+        stopPolling()
+        pollCount = 0
+        pollRunnable = object : Runnable {
+            override fun run() {
+                if (pollCount >= MAX_POLL_COUNT) return
+                pollCount++
+
+                val rootNode = rootInActiveWindow
+                if (rootNode != null) {
+                    val rightRegion = Rect(
+                        (screenWidth * 0.5).toInt(),
+                        0,
+                        screenWidth,
+                        (screenHeight * 0.5).toInt()
+                    )
+
+                    val found = findAndClickSkip(rootNode, rightRegion)
+                    rootNode.recycle()
+
+                    if (found) {
+                        stopPolling()
+                        return
+                    }
+                }
+
+                handler.postDelayed(this, POLL_INTERVAL_MS)
+            }
+        }
+        handler.post(pollRunnable!!)
+    }
+
+    private fun stopPolling() {
+        pollRunnable?.let { handler.removeCallbacks(it) }
+        pollRunnable = null
     }
 
     private fun findAndClickSkip(node: AccessibilityNodeInfo, region: Rect): Boolean {
@@ -81,6 +114,11 @@ class SkipAdService : AccessibilityService() {
         }
 
         return false
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopPolling()
     }
 
     override fun onInterrupt() {}
