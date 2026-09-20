@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">自动跳过</string>
+    <string name="service_description">自动检测并点击屏幕右上角的\"跳过\"按钮，帮你快速跳过广告。</string>
+    <string name="status_on">服务状态：已开启 ✓</string>
+    <string name="status_off">服务状态：未开启</string>
+    <string name="btn_enable">开启无障碍服务</string>
+    <string name="hint">开启后，应用会自动检测右上角的跳过按钮并点击。\n无需 root 权限。</string>
+</resources>
