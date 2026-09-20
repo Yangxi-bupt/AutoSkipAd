@@ -51,7 +51,7 @@ class SkipAdService : AccessibilityService() {
                         (screenWidth * 0.5).toInt(),
                         0,
                         screenWidth,
-                        (screenHeight * 0.5).toInt()
+                        screenHeight
                     )
 
                     val found = findAndClickSkip(rootNode, rightRegion)
