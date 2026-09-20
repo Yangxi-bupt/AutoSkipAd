@@ -20,7 +20,7 @@ class SkipAdService : AccessibilityService() {
 
     companion object {
         private const val POLL_INTERVAL_MS = 500L
-        private const val MAX_POLL_COUNT = 20
+        private const val MAX_POLL_COUNT = 6
     }
 
     override fun onServiceConnected() {
@@ -33,6 +33,7 @@ class SkipAdService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         event ?: return
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
+        if (event.packageName?.toString() == packageName) return
 
         startPolling()
     }
