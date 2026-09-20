@@ -1,15 +1,21 @@
 package com.autoskip
 
 import android.accessibilityservice.AccessibilityService
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
 import android.graphics.Rect
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import androidx.core.app.NotificationCompat
 
 class SkipAdService : AccessibilityService() {
 
-    private val skipKeywords = listOf("跳过", "跳過", "skip", "Skip", "SKIP")
+    private val skipKeywords = listOf("跳过", "跳過", "×", "关闭", "close", "Close", "CLOSE")
 
     private var screenWidth = 0
     private var screenHeight = 0
@@ -21,6 +27,8 @@ class SkipAdService : AccessibilityService() {
     companion object {
         private const val POLL_INTERVAL_MS = 500L
         private const val MAX_POLL_COUNT = 6
+        private const val NOTIFICATION_ID = 1
+        private const val CHANNEL_ID = "autoskip_channel"
     }
 
     override fun onServiceConnected() {
@@ -28,6 +36,33 @@ class SkipAdService : AccessibilityService() {
         val dm = resources.displayMetrics
         screenWidth = dm.widthPixels
         screenHeight = dm.heightPixels
+        startForegroundNotification()
+    }
+
+    private fun startForegroundNotification() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID, "AutoSkip Service", NotificationManager.IMPORTANCE_LOW
+            )
+            val nm = getSystemService(NotificationManager::class.java)
+            nm.createNotificationChannel(channel)
+        }
+
+        val intent = packageManager.getLaunchIntentForPackage(packageName)
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("AutoSkip Running")
+            .setContentText("Monitoring for ad skip buttons")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentIntent(pendingIntent)
+            .setOngoing(true)
+            .build()
+
+        startForeground(NOTIFICATION_ID, notification)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
