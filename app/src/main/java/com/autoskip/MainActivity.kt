@@ -41,13 +41,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun isServiceEnabled(): Boolean {
+
+        private fun isServiceEnabled(): Boolean {
         val am = getSystemService(ACCESSIBILITY_SERVICE) as AccessibilityManager
-        am.enabledAccessibilityServiceList.forEach { info ->
-            if (info.resolveInfo.serviceInfo.packageName == packageName) {
-                return true
-            }
-        }
-        return false
+        return am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+            .any { info -> info.resolveInfo?.serviceInfo?.packageName == packageName }
     }
 }
