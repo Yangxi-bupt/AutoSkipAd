@@ -27,9 +27,13 @@ class SkipAdService : AccessibilityService() {
     companion object {
         private const val POLL_INTERVAL_MS = 500L
         private const val MAX_POLL_COUNT = 6
+        private const val COOLDOWN_MS = 3000L
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "autoskip_channel"
     }
+
+    private var lastTriggerTime = 0L
+    private var lastTriggerPackage = ""
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -68,8 +72,15 @@ class SkipAdService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         event ?: return
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
-        if (event.packageName?.toString() == packageName) return
 
+        val currentPackage = event.packageName?.toString() ?: return
+        if (currentPackage == packageName) return
+
+        val now = System.currentTimeMillis()
+        if (currentPackage == lastTriggerPackage && now - lastTriggerTime < COOLDOWN_MS) return
+
+        lastTriggerTime = now
+        lastTriggerPackage = currentPackage
         startPolling()
     }
 
