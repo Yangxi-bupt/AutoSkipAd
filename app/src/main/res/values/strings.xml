@@ -4,5 +4,6 @@
     <string name="status_on">Service: Active</string>
     <string name="status_off">Service: Inactive</string>
     <string name="btn_enable">Enable Accessibility</string>
+    <string name="btn_battery">Disable Battery Optimization</string>
     <string name="hint">Once enabled, the app will automatically detect and click skip buttons.\nNo root required.</string>
 </resources>
