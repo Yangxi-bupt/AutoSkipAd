@@ -15,7 +15,7 @@ import androidx.core.app.NotificationCompat
 
 class SkipAdService : AccessibilityService() {
 
-    private val skipKeywords = listOf("跳过", "跳過", "关闭", "close", "Close", "CLOSE")
+    private val skipKeywords = listOf("跳过", "跳過", "close", "Close", "CLOSE")
 
     private var screenWidth = 0
     private var screenHeight = 0
